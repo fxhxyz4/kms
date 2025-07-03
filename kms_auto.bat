@@ -1,13 +1,12 @@
 @echo off
-:: @R fxhxyz
-:: @R Mit license
-:: @R fxhxyz.vercel.app
-:: @R github.com/fxhxyz4
+REM fxhxyz
+REM MIT license
+REM fxhxyz.vercel.app
+REM github.com/fxhxyz4
 
 chcp 65001 >nul
 
-:: ================= Admin Check & Start ================= ::
-
+:: ================= Admin Check & Start =================
 net session >nul 2>&1
 
 if %errorlevel% neq 0 (
@@ -16,73 +15,85 @@ if %errorlevel% neq 0 (
 
     pause
     exit /b
-) else (
-    color 08
-    call :main
 )
 
-:: ================== Configure options ================== ::
-
-:: enable delayed variable expansion
+:: ================== Configure options ==================
 setlocal enabledelayedexpansion
 
 :: Debug option
-set _debug=0
+set "_debug=0"
 
 :: Windows activation option
-set _winActivation=0
+set "_winActivation=0"
 
 :: MS Office activation option
-set _officeActivation=0
+set "_officeActivation=0"
 
 :: kms_auto path
-set _kmsPath=%~dp0
+set "_kmsPath=%~dp0"
 
 :: kms_auto file name
-set _kmsFile=kms_auto
+set "_kmsFile=kms_auto"
 
 :: kms_auto log ext
-set _kmsLogExt=.log
+set "_kmsLogExt=.log"
 
 :: kms_auto ext
-set _kmsExt=.bat
+set "_kmsExt=.bat"
 
 :: Logger option
-set _log=1
+set "_log=1"
 
 :: Full log path
-set _logPath=%_kmsPath%%_kmsFile%%_kmsLogExt%
+set "_logPath=%_kmsPath%%_kmsFile%%_kmsLogExt%"
 
 if "%_debug%"=="1" (
     if not exist "%_kmsPath%%_kmsFile%%_kmsExt%" (
         echo [ERROR] Not found %_kmsFile%%_kmsExt% in %_kmsPath%
         if "%_log%"=="1" call :log "Not found %_kmsFile%%_kmsExt% in %_kmsPath%"
+
         exit /b
     )
 )
 
-:: ========================== Functions ========================== ::
+:: ========================== Main Start ==========================
+call :main
+exit /b
+
+:: ========================== Functions ==========================
+
+:main
+call :cmd_clear
+if "%_log%"=="1" call :log_clear
+call :showBanner
+
+color 0A
+call :showFooter
+
+if "%_log%"=="1" call :log "Script running"
+pause
+exit /b
 
 :log
-:: call :log "message"
+REM call :log "message"
 set "_msg=%~1"
 for /f "tokens=1-2 delims= " %%a in ("%date% %time%") do (
     echo [%%a %%b] !_msg!>> "%_logPath%"
 )
+exit /b
 
-:: Clear log file
 :log_clear
 if exist "%_logPath%" del /q "%_logPath%"
+exit /b
 
-:: Cmd clear
 :cmd_clear
 cls
+exit /b
 
-:: Show start banner
 :showBanner
 echo.
 echo.
-color 0B
+
 echo.
 echo ███████╗██╗  ██╗██╗  ██╗██╗  ██╗██╗   ██╗███████╗
 echo ██╔════╝╚██╗██╔╝██║  ██║╚██╗██╔╝╚██╗ ██╔╝╚══███╔╝
@@ -90,21 +101,15 @@ echo █████╗   ╚███╔╝ ███████║ ╚██�
 echo ██╔══╝   ██╔██╗ ██╔══██║ ██╔██╗   ╚██╔╝   ███╔╝  
 echo ██║     ██╔╝ ██╗██║  ██║██╔╝ ██╗   ██║   ███████╗
 echo ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
+
 echo.
 echo ======= Windows/Office activation script =======
+
 echo.
-color 0A
+echo.
+exit /b
+
+:showFooter
 echo Mit license
 echo github.com/fxhxyz4/kms
-echo.
-echo.
-pause
-
-:main
-call :cmd_clear
-if "%_log%"=="1" call :log_clear
-call :showBanner
-
-if "%_log%"=="1" call :log "Script running"
-
-pause
+exit /b
