@@ -70,6 +70,8 @@ call :showBanner
 color 0A
 call :showFooter
 
+call :showMenu
+
 if "%_log%"=="1" call :log "Script running"
 pause
 exit /b
@@ -113,3 +115,21 @@ exit /b
 echo Mit license
 echo github.com/fxhxyz4/kms
 exit /b
+
+:showMenu
+echo.
+echo.
+
+echo Enable debug
+echo Enable log
+
+echo.
+
+echo.
+echo 1. Activate Windows
+
+echo 2. Activate Microsoft Office 365
+echo 3. Check activation status
+
+echo 4. Delete activation
+echo 5. Exit
