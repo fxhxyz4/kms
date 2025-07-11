@@ -175,7 +175,6 @@ mkdir "%_extractPath%" >nul 2>&1
 
 tar -xf "%_downloadPath%" -C "%_extractPath%"
 
-:: Копируем нужный файл в нужное место
 set "_sourceVlmcsd=%_extractPath%\binaries\Windows\intel\vlmcsd-Windows-x64.exe"
 
 if not exist "!_sourceVlmcsd!" (
@@ -220,6 +219,50 @@ echo.
 pause
 exit /b
 
+:resetKMS
+echo [INFO] Удаление ключа и сброс настроек KMS...
+if exist "%windir%\SysNative\cscript.exe" (
+    set "_cscript=%windir%\SysNative\cscript.exe"
+) else (
+    set "_cscript=%windir%\System32\cscript.exe"
+)
+
+"%_cscript%" //nologo "%windir%\System32\slmgr.vbs" /upk
+timeout /t 1 >nul
+"%_cscript%" //nologo "%windir%\System32\slmgr.vbs" /ckms
+
+echo [INFO] KMS сброшен.
+pause
+exit /b
+
+:checkStatus
+echo.
+echo [INFO] Статус Windows:
+if exist "%windir%\SysNative\cscript.exe" (
+    set "_cscript=%windir%\SysNative\cscript.exe"
+) else (
+    set "_cscript=%windir%\System32\cscript.exe"
+)
+"%_cscript%" //nologo "%windir%\system32\slmgr.vbs" /dli
+echo.
+
+echo [INFO] Статус Office:
+set "officeScript="
+for /f "delims=" %%A in ('dir /b /s ospp.vbs 2^>nul') do (
+    set "officeScript=%%A"
+    goto :officeCheck
+)
+echo [WARN] ospp.vbs для Office не найден.
+pause
+exit /b
+
+:officeCheck
+echo --- !officeScript! ---
+cscript //nologo "!officeScript!" /dstatus
+echo.
+pause
+exit /b
+
 :activateOffice
 echo [INFO] Поиск Office...
 set "officeScript="
@@ -231,28 +274,17 @@ for /f "delims=" %%A in ('dir /b /s ospp.vbs 2^>nul') do (
 
 echo [ERROR] ospp.vbs не найден.
 pause
-
 exit /b
 
 :officeFound
 echo [INFO] Найден: !officeScript!
+
+:: Устанавливаем адрес локального KMS
 cscript //nologo "!officeScript!" /sethst:127.0.0.1
+
+:: Запускаем активацию Office
 cscript //nologo "!officeScript!" /act
 
 echo.
 pause
-
 exit /b
-
-:checkStatus
-echo.
-echo [INFO] Статус Windows:
-
-cscript //nologo %windir%\system32\slmgr.vbs /dli
-echo.
-echo [INFO] Статус Office:
-
-for /f "delims=" %%A in ('dir /b /s ospp.vbs 2^>nul') do (
-    echo --- %%A ---
-    cscript //nologo "%%A" /dst
-)
