@@ -8,10 +8,9 @@ chcp 65001 >nul
 
 :: ================= Admin Check & Start =================
 net session >nul 2>&1
-
 if %errorlevel% neq 0 (
     color 0C
-    echo [WARN] Run script as Admin.
+    echo [WARN] Запустите скрипт от имени администратора
 
     pause
     exit /b
@@ -26,62 +25,107 @@ set "_debug=0"
 :: Windows activation option
 set "_winActivation=0"
 
-:: MS Office activation option
+:: Office activation option
 set "_officeActivation=0"
 
-:: kms_auto path
+:: KMS path and filenames
 set "_kmsPath=%~dp0"
 
-:: kms_auto file name
 set "_kmsFile=kms_auto"
 
-:: kms_auto log ext
-set "_kmsLogExt=.log"
-
-:: kms_auto ext
 set "_kmsExt=.bat"
 
-:: Logger option
+set "_kmsLogExt=.log"
+
+:: Log option
 set "_log=1"
 
-:: Full log path
 set "_logPath=%_kmsPath%%_kmsFile%%_kmsLogExt%"
 
+:: vlmcsd config
+set "_vlmcsdURL=https://github.com/Wind4/vlmcsd/releases/latest/download/binaries.tar.gz"
+
+set "_downloadPath=%TEMP%\vlmcsd_binaries.tar.gz"
+
+set "_extractPath=%TEMP%\vlmcsd_bin"
+
+set "_exeName=vlmcsd.exe"
+
+set "_vlmcsdLocalPath=%_extractPath%\%_exeName%"
+
+set "_vlmcsdPort=1688"
+
+:: Debug
 if "%_debug%"=="1" (
     if not exist "%_kmsPath%%_kmsFile%%_kmsExt%" (
-        echo [ERROR] Not found %_kmsFile%%_kmsExt% in %_kmsPath%
-        if "%_log%"=="1" call :log "Not found %_kmsFile%%_kmsExt% in %_kmsPath%"
+        echo [ERROR] Не найден %_kmsFile%%_kmsExt% в %_kmsPath%
+        if "%_log%"=="1" call :log "Не найден %_kmsFile%%_kmsExt%"
 
         exit /b
     )
 )
 
-:: ========================== Main Start ==========================
+:: Get local ip
+for /f "delims=[] tokens=2" %%a in ('ping -4 -n 1 %ComputerName% ^| findstr [') do set NetworkIP=%%a
+
+:: ========================= vlmcsd update =========================
+call :updateVLMCS
+
+:: ========= RUN VLMCD =========
+tasklist | find /i "%_exeName%" >nul
+
+if %errorlevel% neq 0 (
+    echo [INFO] Запуск локального KMS-сервера...
+    start "" /min "%_vlmcsdLocalPath%" -P %_vlmcsdPort%
+
+    timeout /t 2 >nul
+)
+
+:: ================== Start Script ==================
 call :main
-exit /b
+
+:: ========= MENU =========
+:show_menu
+echo.
+echo ╔═══════════════════════════════════════╗
+echo ║           WINDOWS / OFFICE            ║
+echo ╠═══════════════════════════════════════╣
+echo ║ 1. Activate Windows                   ║
+echo ║ 2. Activate Microsoft Office          ║
+echo ║ 3. Check activation status            ║
+echo ║ 4. Delete kms                         ║
+echo ║ 5. Exit                               ║
+echo ╚═══════════════════════════════════════╝
+echo.
+
+set /p choice=Select function: 
+if "%choice%"=="1" call :activateWindows & goto :show_menu
+if "%choice%"=="2" call :activateOffice  & goto :show_menu
+if "%choice%"=="3" call :checkStatus     & goto :show_menu
+if "%choice%"=="4" call :resetKMS        & goto :show_menu
+if "%choice%"=="5" exit /b
+
+echo [ERROR] Неверный выбор. Повторите.
+pause
+
+@REM goto :show_menu
 
 :: ========================== Functions ==========================
 
 :main
 call :cmd_clear
 if "%_log%"=="1" call :log_clear
-call :showBanner
 
 color 0A
-call :showFooter
-
-call :showMenu
-
-if "%_log%"=="1" call :log "Script running"
-pause
-exit /b
+call :show_banner
+call :show_menu
 
 :log
-REM call :log "message"
 set "_msg=%~1"
 for /f "tokens=1-2 delims= " %%a in ("%date% %time%") do (
     echo [%%a %%b] !_msg!>> "%_logPath%"
 )
+
 exit /b
 
 :log_clear
@@ -92,10 +136,7 @@ exit /b
 cls
 exit /b
 
-:showBanner
-echo.
-echo.
-
+:show_banner
 echo.
 echo ███████╗██╗  ██╗██╗  ██╗██╗  ██╗██╗   ██╗███████╗
 echo ██╔════╝╚██╗██╔╝██║  ██║╚██╗██╔╝╚██╗ ██╔╝╚══███╔╝
@@ -103,33 +144,115 @@ echo █████╗   ╚███╔╝ ███████║ ╚██�
 echo ██╔══╝   ██╔██╗ ██╔══██║ ██╔██╗   ╚██╔╝   ███╔╝  
 echo ██║     ██╔╝ ██╗██║  ██║██╔╝ ██╗   ██║   ███████╗
 echo ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝
-
 echo.
 echo ======= Windows/Office activation script =======
-
+echo.
+echo.
+echo.
 echo.
 echo.
 exit /b
 
-:showFooter
-echo Mit license
+:show_footer
+echo MIT license
 echo github.com/fxhxyz4/kms
 exit /b
 
-:showMenu
+:updateVLMCS
+echo [INFO] Проверка/обновление vlmcsd...
+
+if exist "%_vlmcsdLocalPath%" del /q "%_vlmcsdLocalPath%"
+if exist "%_extractPath%" rmdir /s /q "%_extractPath%"
+
+powershell -Command "Invoke-WebRequest -Uri '%_vlmcsdURL%' -OutFile '%_downloadPath%'" 
+
+if not exist "%_downloadPath%" (
+    echo [ERROR] Не удалось скачать vlmcsd.
+    exit /b
+)
+
+mkdir "%_extractPath%" >nul 2>&1
+
+tar -xf "%_downloadPath%" -C "%_extractPath%"
+
+:: Копируем нужный файл в нужное место
+set "_sourceVlmcsd=%_extractPath%\binaries\Windows\intel\vlmcsd-Windows-x64.exe"
+
+if not exist "!_sourceVlmcsd!" (
+    echo [ERROR] vlmcsd-Windows-x64.exe не найден после распаковки.
+    exit /b
+)
+
+copy /y "!_sourceVlmcsd!" "%_vlmcsdLocalPath%" >nul
+
+echo [INFO] vlmcsd обновлён.
+exit /b
+
+:activateWindows
+echo [INFO] Активация Windows...
+
+:: Определяем корректный cscript (64‑бит если доступен)
+if exist "%windir%\SysNative\cscript.exe" (
+    set "_cscript=%windir%\SysNative\cscript.exe"
+) else (
+    set "_cscript=%windir%\System32\cscript.exe"
+)
+
+:: Устанавливаем KMS‑ключ (GVLK)
+"%_cscript%" //nologo "%windir%\System32\slmgr.vbs" /ipk W269N-WFGWX-YVC9B-4J6C9-T83GX
+
+:: Очищаем предыдущие настройки KMS и задаём локальный хост
+"%_cscript%" //nologo "%windir%\System32\slmgr.vbs" /ckms
+timeout /t 1 >nul
+"%_cscript%" //nologo "%windir%\System32\slmgr.vbs" /skms localhost:1688
+
+:: Запускаем активацию
+"%_cscript%" //nologo "%windir%\System32\slmgr.vbs" /ato
+if %errorlevel% neq 0 (
+    echo [ERROR] Активация не удалась. Код: %errorlevel%
+) else (
+    echo [INFO] Активация завершена успешно!
+)
+
+"%_cscript%" //nologo "%windir%\System32\slmgr.vbs" /xpr
+
 echo.
+pause
+exit /b
+
+:activateOffice
+echo [INFO] Поиск Office...
+set "officeScript="
+
+for /f "delims=" %%A in ('dir /b /s ospp.vbs 2^>nul') do (
+    set "officeScript=%%A"
+    goto :officeFound
+)
+
+echo [ERROR] ospp.vbs не найден.
+pause
+
+exit /b
+
+:officeFound
+echo [INFO] Найден: !officeScript!
+cscript //nologo "!officeScript!" /sethst:127.0.0.1
+cscript //nologo "!officeScript!" /act
+
 echo.
+pause
 
-echo Enable debug
-echo Enable log
+exit /b
 
+:checkStatus
 echo.
+echo [INFO] Статус Windows:
 
+cscript //nologo %windir%\system32\slmgr.vbs /dli
 echo.
-echo 1. Activate Windows
+echo [INFO] Статус Office:
 
-echo 2. Activate Microsoft Office 365
-echo 3. Check activation status
-
-echo 4. Delete activation
-echo 5. Exit
+for /f "delims=" %%A in ('dir /b /s ospp.vbs 2^>nul') do (
+    echo --- %%A ---
+    cscript //nologo "%%A" /dst
+)
