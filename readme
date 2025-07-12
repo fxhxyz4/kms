@@ -29,8 +29,8 @@ parameter `-c` or `--count` when starting the container:
 
 Example (this can be changed in the script code):
 
-docker run -d --rm --name vlmcsd_kms -p 1688:1688 mikolatero/vlmcsd -c 1
-
+docker run -it --rm --name vlmcsd_kms mikolatero/vlmcsd /bin/sh
+./vlmcsd -c 1
 The value `-c 1` means that activation will work even with 1 client.
 
 ⚠️ **It is recommended** to use `count = 1` for local use
