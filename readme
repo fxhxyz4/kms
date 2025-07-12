@@ -1,0 +1,37 @@
+====================================================
+               WINDOWS / OFFICE KMS TOOL
+====================================================
+
+This script is designed to activate Windows and 
+    Microsoft Office using a KMS server
+
+The script supports two modes:
+1. Local KMS server via Docker (vlmcsd)
+2. Activation via online KMS servers (at your own risk)
+
+Supported:
+- Windows 10 (Pro, Enterprise, Education, etc.)
+- Windows 11 (corresponding editions)
+- Microsoft Office 2010/2013/2016/2019/2021
+
+====================================================
+
+About the `count` variable in vlmcsd:
+
+By default, vlmcsd (KMS emulator) starts responding to activation
+
+requests only after receiving at least 25** requests from one
+
+version of Windows or Office (this is the behavior of real KMS).
+
+To change this and **enable activation immediately**, you can specify the
+parameter `-c` or `--count` when starting the container:
+
+Example (this can be changed in the script code):
+
+docker run -d --rm --name vlmcsd_kms -p 1688:1688 mikolatero/vlmcsd -c 1
+
+The value `-c 1` means that activation will work even with 1 client.
+
+⚠️ **It is recommended** to use `count = 1` for local use
+or tests, so as not to wait for 25 clients to "accumulate".
