@@ -33,5 +33,5 @@ docker run -it --rm --name vlmcsd_kms mikolatero/vlmcsd /bin/sh
 ./vlmcsd -c 1
 The value `-c 1` means that activation will work even with 1 client.
 
-⚠️ **It is recommended** to use `count = 1` for local use
+⚠️ It is recommended to use `count = 1` for local use
 or tests, so as not to wait for 25 clients to "accumulate".
