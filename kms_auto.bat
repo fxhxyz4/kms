@@ -118,8 +118,7 @@ echo ║ 1. Docker vlmcsd server                       ║
 echo ║ 2. Online KMS server                          ║
 echo ║                                               ║
 echo ║ NOTE:                                         ║
-echo ║ You use the online server at your own         ║
-echo ║ risk                                          ║
+echo ║ You use the online server at your own risk    ║
 echo ╚═══════════════════════════════════════════════╝
 
 set /p choice=Select server: 
