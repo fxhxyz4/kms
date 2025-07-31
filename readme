@@ -20,7 +20,7 @@ About the `count` variable in vlmcsd:
 
 By default, vlmcsd (KMS emulator) starts responding to activation
 
-requests only after receiving at least 25** requests from one
+requests only after receiving at least 25 requests from one
 
 version of Windows or Office (this is the behavior of real KMS).
 
